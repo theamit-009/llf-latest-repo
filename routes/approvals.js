@@ -93,7 +93,7 @@ router.get('/pldFormsApprovalList', verify, (request, response) => {
 
 
 
-router.post('/pldApprovalFeedback',verify, (request,response) => {
+router.post('/pldApprovalFeedback',verify, async(request,response) => {
 
     let objUser = request.user;
     let body = request.body;
@@ -114,6 +114,7 @@ router.post('/pldApprovalFeedback',verify, (request,response) => {
 
     console.log('updateQueryText  : '+updateQueryText);
     console.log('objUser.Id  :  '+objUser.Id+' body.responseId  : '+body.responseId);
+    await
     pool
     .query(updateQueryText,[objUser.sfid, 'PldForm', body.responseId])
     .then((approvalFeedbackResult) => {
@@ -123,6 +124,16 @@ router.post('/pldApprovalFeedback',verify, (request,response) => {
     .catch((approvalFeedbackError) => {
         console.log('approvalFeedbackError  '+approvalFeedbackError.stack);
         response.send('Error');
+    })
+
+    await
+    pool
+    .query('UPDATE salesforce.Project_Survey_Response__c SET Approval_Status__c = $1 WHERE sfid = $2',[statusToSet,body.responseId])
+    .then((responseQueryResult)=>{
+      console.log('responseQueryResult  : '+JSON.stringify(responseQueryResult));
+    })
+    .catch((responseQueryError)=>{
+      console.log('responseQueryError : '+responseQueryError.stack);
     })
  
 });

@@ -1682,13 +1682,14 @@ router.get('/pldReports',verify,(request, response) => {
 })
 
 
-router.post('/sendResponseForApproval',verify, (request, response) => {
+router.post('/sendResponseForApproval',verify, async (request, response) => {
   console.log('Expense request.user '+JSON.stringify(request.user));
   let objUser = request.user;
   let reponseId = request.body.reponseId;
   console.log('reponseId   : '+reponseId);
 
   let managerId = '';
+    await
     pool
     .query('SELECT manager__c FROM salesforce.Team__c WHERE sfid IN (SELECT team__c FROM salesforce.Team_Member__c WHERE Representative__c = $1)',[objUser.sfid])
     .then((teamMemberQueryResult) => {
@@ -1716,6 +1717,16 @@ router.post('/sendResponseForApproval',verify, (request, response) => {
     .catch((teamMemberQueryError) => {
           console.log('teamMemberQueryError   :  '+teamMemberQueryError.stack);
           response.send('Error Occured while sending for approval !');
+    })
+
+    await
+    pool
+    .query('UPDATE salesforce.Project_Survey_Response__c SET Approval_Status__c = $1 WHERE sfid = $2',['Pending',reponseId])
+    .then((responseQueryResult)=>{
+      console.log('responseQueryResult  : '+JSON.stringify(responseQueryResult));
+    })
+    .catch((responseQueryError)=>{
+      console.log('responseQueryError : '+responseQueryError.stack);
     })
 });
 
